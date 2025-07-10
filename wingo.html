@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BDG GAME - Wingo</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+</head>
+<body style="font-family: sans-serif; background: #111; color: white;">
+
+  <div style="padding: 16px;">
+    <h2>💎 BDG GAME - WINGO</h2>
+
+    <!-- Wallet Display -->
+    <div style="margin-bottom: 20px; font-size: 18px;">
+      Wallet Balance: <span id="walletBalance">₹0.00</span>
+    </div>
+
+    <!-- Time Intervals -->
+    <div id="intervals" style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <button class="interval-btn" data-interval="30s">30s</button>
+      <button class="interval-btn" data-interval="1m">1m</button>
+      <button class="interval-btn" data-interval="2m">2m</button>
+      <button class="interval-btn" data-interval="5m">5m</button>
+    </div>
+
+    <!-- Game Info -->
+    <div id="gameArea">
+      <p>Period: <span id="currentPeriod">--</span></p>
+      <p>Timer: <span id="countdown">--</span></p>
+      <p>Result: <span id="resultNumber">--</span> (<span id="resultColor">--</span>)</p>
+    </div>
+
+    <!-- Game History -->
+    <div id="historySection" style="margin-top: 30px;">
+      <h3>📜 History</h3>
+      <ul id="historyList" style="list-style: none; padding-left: 0;"></ul>
+    </div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, onValue, push, child, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// ✅ Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBZ0oT94kfVDpUnLxW_X2P2o-KLSBcDHjw",
+  authDomain: "bdg-game-f3ffc.firebaseapp.com",
+  databaseURL: "https://bdg-game-f3ffc-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "bdg-game-f3ffc",
+  storageBucket: "bdg-game-f3ffc.firebasestorage.app",
+  messagingSenderId: "1022590376869",
+  appId: "1:1022590376869:web:262c7a345f9044a5e5264c"
+};
+
+// ✅ Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+// ✅ Get Interval
+let selectedInterval = "1m";
+const intervalButtons = document.querySelectorAll(".interval-btn");
+
+intervalButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    selectedInterval = btn.dataset.interval;
+    startGame();
+  });
+});
+
+// 🕒 Start Game Loop
+let timer = null;
+let countdownTime = 60;
+
+function startGame() {
+  clearInterval(timer);
+  setPeriod();
+  countdownTime = getTimeInSeconds(selectedInterval);
+  timer = setInterval(runCountdown, 1000);
+}
+
+// 🔁 Get seconds from interval
+function getTimeInSeconds(interval) {
+  if (interval === "30s") return 30;
+  if (interval === "1m") return 60;
+  if (interval === "2m") return 120;
+  if (interval === "5m") return 300;
+  return 60;
+}
+
+// 🎯 Set Period ID
+function setPeriod() {
+  const now = new Date();
+  const period = `${now.getFullYear()}${now.getMonth() + 1}${now.getDate()}-${now.getHours()}${now.getMinutes()}${now.getSeconds()}`;
+  document.getElementById("currentPeriod").innerText = period;
+}
+
+// ⏳ Run Countdown + Generate Result
+function runCountdown() {
+  countdownTime--;
+  document.getElementById("countdown").innerText = countdownTime + "s";
+
+  if (countdownTime <= 0) {
+    const number = Math.floor(Math.random() * 10);
+    const color = getColor(number);
+    const size = number < 5 ? "Small" : "Big";
+    const period = document.getElementById("currentPeriod").innerText;
+
+    document.getElementById("resultNumber").innerText = number;
+    document.getElementById("resultColor").innerText = color;
+    document.getElementById("resultColor").style.color = getColorHex(color);
+
+    saveResultToFirebase(period, number, color, size);
+    updateHistory(period, number, color);
+
+    startGame();
+  }
+}
+
+// 🎨 Get Color
+function getColor(num) {
+  if (num === 0 || num === 5) return "Violet";
+  if (num % 2 === 0) return "Red";
+  return "Green";
+}
+
+function getColorHex(color) {
+  if (color === "Red") return "red";
+  if (color === "Green") return "limegreen";
+  return "violet";
+}
+
+// 💾 Save Result
+function saveResultToFirebase(period, number, color, size) {
+  const resultRef = ref(db, `results/${selectedInterval}/${period}`);
+  set(resultRef, {
+    number,
+    color,
+    size,
+    timestamp: Date.now()
+  });
+}
+
+// 📜 History Display
+function updateHistory(period, number, color) {
+  const historyList = document.getElementById("historyList");
+  const li = document.createElement("li");
+  li.innerHTML = `<strong>${period}</strong> → 
+    <span style="color:${getColorHex(color)}">${number} (${color})</span>`;
+  historyList.prepend(li);
+
+  if (historyList.children.length > 50) {
+    historyList.removeChild(historyList.lastChild);
+  }
+}
+
+// 🔐 Load Wallet (On Auth)
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    const uid = user.uid;
+    const walletRef = ref(db, `users/${uid}/wallet`);
+
+    onValue(walletRef, (snapshot) => {
+      const balance = snapshot.val() || 0;
+      document.getElementById("walletBalance").innerText = `₹${balance}`;
+    });
+  }
+});
+
+// 🟢 Start Default Game
+startGame();
+      <!-- DEPOSIT FORM -->
+<h3>💰 Deposit</h3>
+<form id="depositForm">
+  <input type="text" placeholder="UPI ID" id="upi" required><br>
+  <input type="number" placeholder="Amount ₹" id="depositAmount" required><br>
+  <input type="text" placeholder="UTR Number" id="utr" required><br>
+  <input type="file" id="screenshot" required><br>
+  <button type="submit">Submit Deposit</button>
+</form>
+
+<!-- WITHDRAW FORM -->
+<h3 style="margin-top:20px;">🏦 Withdraw</h3>
+<form id="withdrawForm">
+  <input type="text" placeholder="Account Number" id="accNumber" required><br>
+  <input type="text" placeholder="IFSC Code" id="ifsc" required><br>
+  <input type="text" placeholder="Account Holder Name" id="accHolder" required><br>
+  <input type="number" placeholder="Amount ₹" id="withdrawAmount" required><br>
+  <button type="submit">Submit Withdraw</button>
+</form>
+import { push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// ✅ Deposit Submit
+document.getElementById("depositForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const user = auth.currentUser;
+  if (!user) return alert("Please log in first");
+
+  const upi = document.getElementById("upi").value;
+  const amount = document.getElementById("depositAmount").value;
+  const utr = document.getElementById("utr").value;
+  const screenshot = document.getElementById("screenshot").files[0];
+
+  const depositRef = ref(db, `deposits/${user.uid}`);
+  const newRef = push(depositRef);
+  set(newRef, {
+    upi,
+    amount: parseFloat(amount),
+    utr,
+    status: "pending",
+    timestamp: Date.now(),
+    screenshot: screenshot.name // (Use Firebase Storage if needed)
+  });
+
+  alert("Deposit request sent!");
+  e.target.reset();
+});
+
+// ✅ Withdraw Submit
+document.getElementById("withdrawForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const user = auth.currentUser;
+  if (!user) return alert("Please log in first");
+
+  const acc = document.getElementById("accNumber").value;
+  const ifsc = document.getElementById("ifsc").value;
+  const holder = document.getElementById("accHolder").value;
+  const amount = document.getElementById("withdrawAmount").value;
+
+  const withdrawRef = ref(db, `withdrawals/${user.uid}`);
+  const newRef = push(withdrawRef);
+  set(newRef, {
+    acc,
+    ifsc,
+    holder,
+    amount: parseFloat(amount),
+    status: "pending",
+    timestamp: Date.now()
+  });
+
+  alert("Withdraw request sent!");
+  e.target.reset();
+});
