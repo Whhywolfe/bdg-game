@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>BDG GAME – Register</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    /* 🔒 Premium Style (same as before) */
+    body { margin: 0; font-family: 'Roboto', sans-serif; background-color: #121212; color: #ffffff; }
+    .topbar { background-color: #1f1f1f; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
+    .topbar .logo { text-align: center; flex-grow: 1; }
+    .logo-title { color: #FFD700; font-weight: bold; font-size: 20px; margin-top: 2px; }
+    .logo-line { color: #FFD700; font-size: 14px; margin-top: 4px; }
+    .logo-line span { margin: 0 6px; }
+    .container { max-width: 400px; margin: auto; padding: 20px; }
+    .section-title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+    .subtitle { font-size: 14px; color: #ccc; margin-bottom: 25px; }
+    .section-header { text-align: center; margin: 30px 0 10px; }
+    .section-header i { font-size: 24px; color: #FFD700; display: block; margin-bottom: 8px; }
+    .section-header .title { font-size: 16px; font-weight: bold; color: #FFD700; }
+    .section-header .line { width: 100%; height: 2px; background-color: #FFD700; margin-top: 8px; }
+    .field-label { color: #ffffff; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; }
+    .field-label i { margin-right: 8px; color: #FFD700; }
+    .input-wrapper { background-color: #1e1e1e; border-radius: 8px; display: flex; align-items: center; padding: 12px; margin-bottom: 18px; position: relative; }
+    .input-wrapper input { background: transparent; border: none; outline: none; flex: 1; color: #fff; font-size: 16px; }
+    .input-wrapper .dropdown { color: #fff; font-size: 16px; margin-right: 8px; display: flex; align-items: center; cursor: pointer; }
+    .checkbox { display: flex; align-items: center; margin: 15px 0; font-size: 14px; }
+    .checkbox input { margin-right: 10px; transform: scale(1.1); }
+    .checkbox a { color: red; text-decoration: none; margin-left: 4px; }
+    .register-btn { background: linear-gradient(to right, #fcd34d, #eab308); border: none; width: 100%; padding: 14px; border-radius: 30px; font-size: 16px; font-weight: bold; color: #333; cursor: pointer; margin-top: 10px; }
+    .login-link { margin-top: 25px; text-align: center; color: #FFD700; font-size: 14px; border: 1px solid #FFD700; border-radius: 20px; padding: 10px; width: 100%; }
+    .login-link a { color: #FFD700; text-decoration: none; font-weight: bold; margin-left: 4px; }
+    .eye-icon { margin-left: 10px; color: #888; cursor: pointer; }
+    .region { font-size: 10px; color: #888; display: none; padding-left: 60px; }
+    i.icon { width: 20px; display: inline-block; text-align: center; }
+    option { color: #000; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <span style="color:#FFD700;">←</span>
+    <div class="logo">
+      <div style="color:#FFD700; font-size:12px; line-height:1; margin-bottom:4px;">─────── ✦ ───────</div>
+      <div class="logo-title" style="margin:0;">BDG GAME</div>
+      <div style="color:#FFD700; font-size:12px; line-height:1; margin-top:4px;">─────── ✦ ───────</div>
+    </div>
+    <img alt="EN" src="https://flagcdn.com/us.svg" style="width: 24px; height: 16px;"/>
+  </div>
+
+  <div class="container">
+    <div class="section-title">Register</div>
+    <div class="subtitle">Please register with email and password</div>
+
+    <div class="section-header">
+      <i class="fas fa-user-plus"></i>
+      <div class="title">Create your account</div>
+      <div class="line"></div>
+    </div>
+
+    <div class="field-label"><i class="fas fa-envelope icon"></i> Gmail Address</div>
+    <div class="input-wrapper">
+      <input id="email" placeholder="Enter your Gmail" type="email"/>
+    </div>
+
+    <div class="field-label"><i class="fas fa-lock icon"></i> Set password</div>
+    <div class="input-wrapper">
+      <input id="password" placeholder="Set password" type="password"/>
+      <span class="eye-icon"><i class="fas fa-eye"></i></span>
+    </div>
+
+    <div class="field-label"><i class="fas fa-lock icon"></i> Confirm password</div>
+    <div class="input-wrapper">
+      <input id="confirm" placeholder="Confirm password" type="password"/>
+      <span class="eye-icon"><i class="fas fa-eye"></i></span>
+    </div>
+
+    <div class="field-label"><i class="fas fa-user-tag icon"></i> Invite code</div>
+    <div class="input-wrapper">
+      <input id="invite" type="text" value="651644302652"/>
+    </div>
+
+    <div class="checkbox">
+      <input type="checkbox" id="agree"/>
+      <label>I agree to <a href="#">[Privacy Policy]</a></label>
+    </div>
+
+    <button class="register-btn" onclick="registerUser()">Register</button>
+
+    <div class="login-link">
+      Already have an account? <a href="#">Login</a>
+    </div>
+  </div>
+
+  <!-- Firebase + Register Logic -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBZ0oT94kfVDpUnLxW_X2P2o-KLSBcDHjw",
+      authDomain: "bdg-game-f3ffc.firebaseapp.com",
+      databaseURL: "https://bdg-game-f3ffc-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "bdg-game-f3ffc",
+      storageBucket: "bdg-game-f3ffc.firebasestorage.app",
+      messagingSenderId: "1022590376869",
+      appId: "1:1022590376869:web:262c7a345f9044a5e5264c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    window.registerUser = async () => {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      const confirm = document.getElementById("confirm").value;
+      const invite = document.getElementById("invite").value;
+      const agree = document.getElementById("agree").checked;
+
+      if (!email || !pass || !confirm || !agree) return alert("Please fill all fields and agree to terms.");
+      if (pass !== confirm) return alert("Passwords do not match.");
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        const user = userCredential.user;
+
+        await set(ref(db, 'users/' + user.uid), {
+          uid: user.uid,
+          email: email,
+          inviteCode: invite,
+          vip: false,
+          wallet: 0,
+          registeredAt: new Date().toISOString()
+        });
+
+        alert("✅ Registered successfully!");
+        // window.location.href = "dashboard.html";
+      } catch (error) {
+        alert("❌ " + error.message);
+      }
+    };
+  </script>
+
+  <script>
+    // Show/Hide Password
+    document.querySelectorAll('.eye-icon').forEach(function(icon) {
+      icon.addEventListener('click', function () {
+        const input = this.previousElementSibling;
+        if (input.type === 'password') {
+          input.type = 'text';
+          this.innerHTML = '<i class="fas fa-eye-slash"></i>';
+        } else {
+          input.type = 'password';
+          this.innerHTML = '<i class="fas fa-eye"></i>';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
