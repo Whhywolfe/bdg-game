@@ -91,8 +91,16 @@
         alert("✅ Login successful! Welcome back.");
       }
 
-      // Optionally redirect
-      // window.location.href = "dashboard.html";
+      } else {
+        alert("✅ Login successful! Welcome back.");
+      }
+
+      // ✅ Redirect to dashboard
+      window.location.href = "dashboard.html";
+
+    } catch (error) {
+      alert("❌ " + error.message);
+  }
 
     } catch (error) {
       alert("❌ " + error.message);
