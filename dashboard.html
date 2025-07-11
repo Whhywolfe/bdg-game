@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BDG GAME – Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* (Same CSS as before – unchanged for premium layout) */
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Outfit',sans-serif; }
+    body { background:#0d0d0d; color:#fff; padding:20px; }
+    .dashboard { max-width:420px; margin:auto; background:#131313; border-radius:20px; box-shadow:0 0 25px rgba(255,215,0,0.15); overflow:hidden; position:relative; }
+    .profile { background:radial-gradient(circle at top, #222, #111); padding:30px 20px 20px; text-align:center; border-bottom:1px solid #333; position:relative; }
+    .avatar-container { position:relative; display:inline-block; }
+    .profile img { width:90px; height:90px; border-radius:50%; border:3px solid #ffd700; box-shadow:0 0 8px #ffd700; }
+    .online-indicator { position:absolute; bottom:4px; right:4px; width:16px; height:16px; background:#4caf50; border:2px solid #131313; border-radius:50%; box-shadow:0 0 4px #4caf50; }
+    .profile h2 { margin-top:10px; font-size:20px; color:#ffd700; }
+    .profile p { font-size:13px; color:#bbb; margin-top:4px; }
+    .wallet { display:flex; justify-content:space-around; background:#1c1c1c; padding:20px; border-bottom:1px solid #333; }
+    .wallet .box { background:#0f0f0f; padding:15px 20px; border-radius:12px; text-align:center; border:1px solid #333; width:45%; }
+    .wallet .box h4 { color:#999; font-size:13px; }
+    .wallet .box p { font-size:18px; color:#fff; font-weight:bold; }
+    .buttons { display:flex; justify-content:space-between; padding:20px; background:#181818; }
+    .buttons button { flex:1; margin:0 5px; background:linear-gradient(135deg,#ffce00,#ff9d00); color:#000; padding:12px; border:none; border-radius:12px; font-weight:600; font-size:14px; cursor:pointer; }
+    .menu { background:#1b1b1b; padding:20px; }
+    .menu-item { background:#101010; margin:8px 0; padding:12px 16px; border-radius:10px; border:1px solid #2a2a2a; font-size:15px; color:#eee; text-align:left; }
+    .logout { margin:20px; background:#c62828; color:#fff; text-align:center; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; }
+    .footer { text-align:center; font-size:12px; color:#777; padding-bottom:20px; }
+    .modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); display:none; justify-content:center; align-items:center; z-index:100; }
+    .modal-content { background:#1a1a1a; padding:25px; width:90%; max-width:360px; border-radius:12px; box-shadow:0 0 15px #000; }
+    .modal-content h3 { font-size:18px; color:#ffd700; margin-bottom:12px; }
+    .modal-content label { font-size:13px; color:#aaa; display:block; margin-top:8px; }
+    .modal-content input { width:100%; padding:10px; background:#0f0f0f; border:1px solid #333; border-radius:8px; margin-top:4px; color:#fff; }
+    .modal-content button { background:#ffb300; border:none; padding:12px; font-weight:600; border-radius:8px; width:100%; margin-top:16px; cursor:pointer; }
+    .close-btn { margin-top:10px; text-align:center; color:#999; cursor:pointer; font-size:13px; }
+  </style>
+</head>
+<body>
+
+<div class="dashboard">
+  <div class="profile">
+    <div class="avatar-container">
+      <img src="https://i.ibb.co/7zM7jMv/avatar-placeholder.png" alt="Avatar"/>
+      <div class="online-indicator"></div>
+    </div>
+    <h2>UID: Loading...</h2>
+    <p>VIP Level: --</p>
+    <p>Last Login: --</p>
+  </div>
+
+  <div class="wallet">
+    <div class="box">
+      <h4>Wallet</h4>
+      <p>₹0</p>
+    </div>
+    <div class="box">
+      <h4>Points</h4>
+      <p>0</p>
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button onclick="showModal('depositModal')">Deposit</button>
+    <button onclick="showModal('withdrawModal')">Withdraw</button>
+    <button>VIP</button>
+  </div>
+
+  <div class="menu">
+    <div class="menu-item">Game History</div>
+    <div class="menu-item">Transaction</div>
+    <div class="menu-item">Deposit History</div>
+    <div class="menu-item">Withdrawal History</div>
+    <div class="menu-item">Notification</div>
+    <div class="menu-item">Gifts</div>
+    <div class="menu-item">Game Statistics</div>
+    <div class="menu-item">Language</div>
+    <div class="menu-item">Service Centre</div>
+    <div class="menu-item">Settings</div>
+    <div class="menu-item">Feedback</div>
+    <div class="menu-item">Announcement</div>
+    <div class="menu-item">About Us</div>
+  </div>
+
+  <div class="logout" onclick="logout()">Logout</div>
+  <div class="footer">© 2025 BDG GAME. All Rights Reserved.</div>
+</div>
+
+<!-- Deposit Modal -->
+<div class="modal" id="depositModal">
+  <div class="modal-content">
+    <h3>Deposit Funds</h3>
+    <label>Amount</label>
+    <input type="number" id="depositAmount" placeholder="₹ Enter Amount"/>
+    <button onclick="submitDeposit()">Submit Deposit</button>
+    <div class="close-btn" onclick="closeModal('depositModal')">Cancel</div>
+  </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div class="modal" id="withdrawModal">
+  <div class="modal-content">
+    <h3>Withdraw Funds</h3>
+    <label>Amount</label>
+    <input type="number" id="withdrawAmount" placeholder="₹ Enter Amount"/>
+    <button onclick="submitWithdrawal()">Submit Withdrawal</button>
+    <div class="close-btn" onclick="closeModal('withdrawModal')">Cancel</div>
+  </div>
+</div>
+
+<!-- Firebase Scripts -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBZ0oT94kfVDpUnLxW_X2P2o-KLSBcDHjw",
+    authDomain: "bdg-game-f3ffc.firebaseapp.com",
+    databaseURL: "https://bdg-game-f3ffc-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "bdg-game-f3ffc",
+    storageBucket: "bdg-game-f3ffc.appspot.com",
+    messagingSenderId: "1022590376869",
+    appId: "1:1022590376869:web:262c7a345f9044a5e5264c"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const uid = user.uid;
+      const userRef = ref(db, 'users/' + uid);
+      const snapshot = await get(userRef);
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        document.querySelector(".profile h2").innerText = `UID: ${uid}`;
+        document.querySelector(".profile p:nth-child(3)").innerText = `VIP Level: ${data.vipLevel}`;
+        document.querySelector(".profile p:nth-child(4)").innerText = `Last Login: ${timeAgo(data.lastLogin)}`;
+        document.querySelector(".wallet .box:nth-child(1) p").innerText = `₹${data.wallet}`;
+        document.querySelector(".wallet .box:nth-child(2) p").innerText = `${data.points}`;
+        update(userRef, { lastLogin: new Date().toISOString() });
+      }
+    } else {
+      alert("Not logged in. Redirecting to login.");
+      window.location.href = "login.html";
+    }
+  });
+
+  function timeAgo(dateStr) {
+    const mins = Math.floor((new Date() - new Date(dateStr)) / 60000);
+    return mins < 60 ? `${mins} mins ago` : `${Math.floor(mins / 60)} hours ago`;
+  }
+
+  window.submitDeposit = async function () {
+    const user = auth.currentUser;
+    const amount = parseInt(document.getElementById("depositAmount").value);
+    if (!user || isNaN(amount)) return;
+    const refPath = ref(db, "users/" + user.uid);
+    const snapshot = await get(refPath);
+    if (snapshot.exists()) {
+      const current = snapshot.val().wallet || 0;
+      update(refPath, { wallet: current + amount }).then(() => {
+        alert("Deposit successful ✅");
+        location.reload();
+      });
+    }
+  };
+
+  window.submitWithdrawal = async function () {
+    const user = auth.currentUser;
+    const amount = parseInt(document.getElementById("withdrawAmount").value);
+    if (!user || isNaN(amount)) return;
+    const refPath = ref(db, "users/" + user.uid);
+    const snapshot = await get(refPath);
+    if (snapshot.exists()) {
+      const current = snapshot.val().wallet || 0;
+      if (current >= amount) {
+        update(refPath, { wallet: current - amount }).then(() => {
+          alert("Withdrawal successful ✅");
+          location.reload();
+        });
+      } else {
+        alert("Not enough balance ❌");
+      }
+    }
+  };
+
+  window.logout = function () {
+    signOut(auth).then(() => {
+      alert("Logged out.");
+      window.location.href = "login.html";
+    });
+  };
+
+  window.showModal = function (id) {
+    document.getElementById(id).style.display = 'flex';
+  };
+
+  window.closeModal = function (id) {
+    document.getElementById(id).style.display = 'none';
+  };
+</script>
+
+</body>
+</html>
