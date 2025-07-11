@@ -61,44 +61,41 @@
   const auth = getAuth(app);
   const db = getDatabase(app);
 
-  window.login = async () => {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
+ window.login = async () => {
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("password").value;
 
-    if (!email || !pass) return alert("Fill all fields");
+  if (!email || !pass) return alert("Fill all fields");
 
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-      const user = userCredential.user;
-      const uid = user.uid;
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+    const user = userCredential.user;
+    const uid = user.uid;
 
-      const dbRef = ref(db);
-      const snapshot = await get(child(dbRef, `users/${uid}`));
+    const dbRef = ref(db);
+    const snapshot = await get(child(dbRef, `users/${uid}`));
 
-      if (!snapshot.exists()) {
-  const customerId = "BDG" + Math.floor(100000 + Math.random() * 900000);
-  await set(ref(db, `users/${uid}`), {
-    uid: uid,
-    email: email,
-    customerId: customerId,
-    wallet: 0,
-    vip: false,
-    loginTime: new Date().toISOString()
-  });
-  alert("✅ First login, ID assigned: " + customerId);
-} else {
-  alert("✅ Login successful! Welcome back.");
-}
-
-// ✅ Use setTimeout to ensure alert is done before redirect
-setTimeout(() => {
-  window.location.href = "index.html"; // Or dashboard.html
-}, 100); // slight delay so alert closes first
-    } catch (error) {
-      alert("❌ " + error.message);
+    if (!snapshot.exists()) {
+      const customerId = "BDG" + Math.floor(100000 + Math.random() * 900000);
+      await set(ref(db, `users/${uid}`), {
+        uid: uid,
+        email: email,
+        customerId: customerId,
+        wallet: 0,
+        vip: false,
+        loginTime: new Date().toISOString()
+      });
+      alert("✅ First login, ID assigned: " + customerId);
+    } else {
+      alert("✅ Login successful! Welcome back.");
     }
-  };
-</script>
 
-</body>
-</html>
+    // ✅ Safe redirect after alert
+    setTimeout(() => {
+      window.location.href = "index.html"; // Or your game/dashboard page
+    }, 100);
+
+  } catch (error) {
+    alert("❌ " + error.message);
+  }
+};
