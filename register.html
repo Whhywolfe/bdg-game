@@ -113,50 +113,34 @@
     const db = getDatabase(app);
 
     window.registerUser = async () => {
-      const email = document.getElementById("email").value;
-      const pass = document.getElementById("password").value;
-      const confirm = document.getElementById("confirm").value;
-      const invite = document.getElementById("invite").value;
-      const agree = document.getElementById("agree").checked;
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("password").value;
+  const confirm = document.getElementById("confirm").value;
+  const invite = document.getElementById("invite").value;
+  const agree = document.getElementById("agree").checked;
 
-      if (!email || !pass || !confirm || !agree) return alert("Please fill all fields and agree to terms.");
-      if (pass !== confirm) return alert("Passwords do not match.");
+  if (!email || !pass || !confirm || !agree) return alert("Please fill all fields and agree to terms.");
+  if (pass !== confirm) return alert("Passwords do not match.");
 
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-        const user = userCredential.user;
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+    const user = userCredential.user;
 
-        await set(ref(db, 'users/' + user.uid), {
-          uid: user.uid,
-          email: email,
-          inviteCode: invite,
-          vip: false,
-          wallet: 0,
-          registeredAt: new Date().toISOString()
-        });
-
-        alert("✅ Registered successfully!");
-        // window.location.href = "dashboard.html";
-      } catch (error) {
-        alert("❌ " + error.message);
-      }
-    };
-  </script>
-
-  <script>
-    // Show/Hide Password
-    document.querySelectorAll('.eye-icon').forEach(function(icon) {
-      icon.addEventListener('click', function () {
-        const input = this.previousElementSibling;
-        if (input.type === 'password') {
-          input.type = 'text';
-          this.innerHTML = '<i class="fas fa-eye-slash"></i>';
-        } else {
-          input.type = 'password';
-          this.innerHTML = '<i class="fas fa-eye"></i>';
-        }
-      });
+    await set(ref(db, 'users/' + user.uid), {
+      uid: user.uid,
+      email: email,
+      inviteCode: invite,
+      vip: false,
+      wallet: 0,
+      registeredAt: new Date().toISOString()
     });
-  </script>
-</body>
-</html>
+
+    alert("✅ Registered successfully!");
+    setTimeout(() => {
+      window.location.href = "index.html"; // Redirect to game/home page
+    }, 200);
+
+  } catch (error) {
+    alert("❌ " + error.message);
+  }
+};
