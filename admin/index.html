@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BDG Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; background: #000; color: #fff; padding: 20px; }
+    input, button, select { padding: 8px; margin: 5px; }
+    section { border: 1px solid #555; padding: 15px; margin-top: 20px; border-radius: 8px; }
+    h2 { margin-top: 0; color: gold; }
+    label { display: block; margin-top: 10px; }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head>
+<body>
+  <h1>🔥 BDG Admin Panel</h1>
+
+  <div id="login-section">
+    <h2>Admin Login</h2>
+    <input type="email" id="admin-email" placeholder="Email" /><br>
+    <input type="password" id="admin-password" placeholder="Password" /><br>
+    <button onclick="adminLogin()">Login</button>
+    <p id="login-status"></p>
+  </div>
+
+  <div id="admin-panel" style="display:none;">
+
+    <section>
+      <h2>✅ User Approval</h2>
+      <div id="user-approvals"></div>
+    </section>
+
+    <section>
+      <h2>💸 Deposit Requests</h2>
+      <div id="deposit-requests"></div>
+    </section>
+
+    <section>
+      <h2>💵 Withdrawal Requests</h2>
+      <div id="withdrawal-requests"></div>
+    </section>
+
+    <section>
+      <h2>🎯 Manual Result Control</h2>
+      <label>Interval:
+        <select id="manual-interval">
+          <option value="30s">30s</option>
+          <option value="1m">1m</option>
+          <option value="2m">2m</option>
+          <option value="5m">5m</option>
+        </select>
+      </label>
+      <label>Period: <input type="text" id="manual-period" /></label>
+      <label>Number (0-9): <input type="number" id="manual-number" min="0" max="9" /></label>
+      <label>Color: 
+        <select id="manual-color">
+          <option value="Red">Red</option>
+          <option value="Green">Green</option>
+          <option value="Violet">Violet</option>
+        </select>
+      </label>
+      <button onclick="setManualResult()">Set Result</button>
+    </section>
+
+    <section>
+      <h2>🏦 Update Payment Details</h2>
+      <label>UPI ID: <input type="text" id="upi-id" /></label>
+      <label>Bank Account No: <input type="text" id="account-no" /></label>
+      <label>IFSC Code: <input type="text" id="ifsc-code" /></label>
+      <label>Account Holder Name: <input type="text" id="holder-name" /></label>
+      <button onclick="updatePaymentDetails()">Save Payment Details</button>
+    </section>
+  </div>
+
+  <script>
+    // Your Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBZ0oT94kfVDpUnLxW_X2P2o-KLSBcDHjw",
+      authDomain: "bdg-game-f3ffc.firebaseapp.com",
+      databaseURL: "https://bdg-game-f3ffc-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "bdg-game-f3ffc",
+      storageBucket: "bdg-game-f3ffc.firebasestorage.app",
+      messagingSenderId: "1022590376869",
+      appId: "1:1022590376869:web:262c7a345f9044a5e5264c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    function adminLogin() {
+      const email = document.getElementById('admin-email').value;
+      const password = document.getElementById('admin-password').value;
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          document.getElementById('login-status').innerText = "Logged in";
+          document.getElementById('login-section').style.display = 'none';
+          document.getElementById('admin-panel').style.display = 'block';
+          loadData();
+        })
+        .catch(error => {
+          document.getElementById('login-status').innerText = error.message;
+        });
+    }
+
+    function loadData() {
+      // User approvals
+      db.ref('users').on('value', snap => {
+        const container = document.getElementById('user-approvals');
+        container.innerHTML = '';
+        snap.forEach(child => {
+          const user = child.val();
+          if (!user.approved) {
+            const div = document.createElement('div');
+            div.innerHTML = `${user.email} 
+              <button onclick="approveUser('${child.key}')">Approve</button>`;
+            container.appendChild(div);
+          }
+        });
+      });
+
+      // Deposit requests
+      db.ref('depositRequests').on('value', snap => {
+        const container = document.getElementById('deposit-requests');
+        container.innerHTML = '';
+        snap.forEach(userSnap => {
+          userSnap.forEach(reqSnap => {
+            const req = reqSnap.val();
+            if (req.status === 'pending') {
+              const div = document.createElement('div');
+              div.innerHTML = `
+                UID: ${userSnap.key} | ₹${req.amount} | UTR: ${req.utr}
+                <button onclick="approveDeposit('${userSnap.key}', '${reqSnap.key}', ${req.amount})">Approve</button>
+              `;
+              container.appendChild(div);
+            }
+          });
+        });
+      });
+
+      // Withdrawal requests
+      db.ref('withdrawalRequests').on('value', snap => {
+        const container = document.getElementById('withdrawal-requests');
+        container.innerHTML = '';
+        snap.forEach(userSnap => {
+          userSnap.forEach(reqSnap => {
+            const req = reqSnap.val();
+            if (req.status === 'pending') {
+              const div = document.createElement('div');
+              div.innerHTML = `
+                UID: ${userSnap.key} | ₹${req.amount} | Acc: ${req.accountNumber}
+                <button onclick="approveWithdrawal('${userSnap.key}', '${reqSnap.key}', ${req.amount})">Approve</button>
+              `;
+              container.appendChild(div);
+            }
+          });
+        });
+      });
+    }
+
+    function approveUser(uid) {
+      db.ref('users/' + uid).update({ approved: true });
+      alert('✅ User approved!');
+    }
+
+    function approveDeposit(uid, requestId, amount) {
+      db.ref('depositRequests/' + uid + '/' + requestId).update({ status: 'approved' });
+      db.ref('users/' + uid + '/wallet').transaction(w => (w || 0) + amount);
+      alert('💸 Deposit approved!');
+    }
+
+    function approveWithdrawal(uid, requestId, amount) {
+      db.ref('withdrawalRequests/' + uid + '/' + requestId).update({ status: 'approved' });
+      db.ref('users/' + uid + '/wallet').transaction(w => (w || 0) - amount);
+      alert('💵 Withdrawal approved!');
+    }
+
+    function setManualResult() {
+      const interval = document.getElementById('manual-interval').value;
+      const period = document.getElementById('manual-period').value;
+      const number = document.getElementById('manual-number').value;
+      const color = document.getElementById('manual-color').value;
+      db.ref('manualResults/' + interval + '/' + period).set({ number, color });
+      alert('🎯 Manual result set!');
+    }
+
+    function updatePaymentDetails() {
+      const upi = document.getElementById('upi-id').value;
+      const acc = document.getElementById('account-no').value;
+      const ifsc = document.getElementById('ifsc-code').value;
+      const holder = document.getElementById('holder-name').value;
+      db.ref('paymentDetails').set({
+        upi, accountNumber: acc, ifsc, holder
+      });
+      alert('🏦 Payment details updated!');
+    }
+  </script>
+</body>
+</html>
